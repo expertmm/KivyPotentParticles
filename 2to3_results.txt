@@ -1,0 +1,121 @@
+RefactoringTool: Skipping implicit fixer: buffer
+RefactoringTool: Skipping implicit fixer: idioms
+RefactoringTool: Skipping implicit fixer: set_literal
+RefactoringTool: Skipping implicit fixer: ws_comma
+RefactoringTool: No changes to C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\run-tests.py
+RefactoringTool: No changes to C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\demo\main.py
+RefactoringTool: No changes to C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\kivyparticle\__init__.py
+RefactoringTool: Refactored C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\kivyparticle\engine.py
+--- C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\kivyparticle\engine.py       (original)
++++ C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\kivyparticle\engine.py       (refactored)
+@@ -110,7 +110,7 @@
+
+         Clock.schedule_once(self._update, self.update_interval)
+
+-    def start(self, duration=sys.maxint):
++    def start(self, duration=sys.maxsize):
+         if self.emission_rate != 0:
+             self.emission_time = duration
+
+@@ -374,7 +374,7 @@
+
+                 self.frame_time -= time_between_particles
+
+-            if self.emission_time != sys.maxint:
++            if self.emission_time != sys.maxsize:
+                 self.emission_time = max(0.0, self.emission_time - passed_time)
+
+     def _render(self):
+RefactoringTool: No changes to C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\kivyparticle\utils.py
+RefactoringTool: No changes to C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\test\__init__.py
+RefactoringTool: Refactored C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\test\engine.py
+--- C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\test\engine.py       (original)
++++ C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\test\engine.py       (refactored)
+@@ -11,41 +11,41 @@
+         self.s = ParticleSystem('test/media/config.pex')
+
+     def test_config(self):
+-        self.assertEquals((32, 32), self.s.texture.size)
+-        self.assertEquals(160.55, self.s.emitter_x)
+-        self.assertEquals(428.95, self.s.emitter_y)
+-        self.assertEquals(104.41, self.s.emitter_x_variance)
+-        self.assertEquals(0.00, self.s.emitter_y_variance)
+-        self.assertEquals(0.00, self.s.gravity_x)
+-        self.assertEquals(0.00, self.s.gravity_y)
+-        self.assertEquals(0, self.s.emitter_type)
+-        self.assertEquals(300, self.s.max_num_particles)
+-        self.assertEquals(2.0, self.s.life_span)
+-        self.assertEquals(1.9, self.s.life_span_variance)
+-        self.assertEquals(70.0, self.s.start_size)
+-        self.assertEquals(49.53, self.s.start_size_variance)
+-        self.assertEquals(10.0, self.s.end_size)
+-        self.assertEquals(0.0, self.s.end_size_variance)
+-        self.assertEquals(math.radians(270.37), self.s.emit_angle)
+-        self.assertEquals(math.radians(15.0), self.s.emit_angle_variance)
+-        self.assertEquals(0.0, self.s.start_rotation)
+-        self.assertEquals(0.0, self.s.start_rotation_variance)
+-        self.assertEquals(0.0, self.s.end_rotation)
+-        self.assertEquals(0.0, self.s.end_rotation_variance)
+-        self.assertEquals(90.0, self.s.speed)
+-        self.assertEquals(30.0, self.s.speed_variance)
+-        self.assertEquals(0.0, self.s.radial_acceleration)
+-        self.assertEquals(0.0, self.s.radial_acceleration_variance)
+-        self.assertEquals(0.0, self.s.tangential_acceleration)
+-        self.assertEquals(0.0, self.s.tangential_acceleration_variance)
+-        self.assertEquals(100.0, self.s.max_radius)
+-        self.assertEquals(0.0, self.s.max_radius_variance)
+-        self.assertEquals(0.0, self.s.min_radius)
+-        self.assertEquals(0.0, self.s.rotate_per_second)
+-        self.assertEquals(0.0, self.s.rotate_per_second_variance)
+-        self.assertEquals([1.0, 0.31, 0.0, 0.62], self.s.start_color)
+-        self.assertEquals([0.0, 0.0, 0.0, 0.0], self.s.start_color_variance)
+-        self.assertEquals([1.0, 0.31, 0.0, 0.0], self.s.end_color)
+-        self.assertEquals([0.0, 0.0, 0.0, 0.0], self.s.end_color_variance)
+-        self.assertEquals(GL_SRC_ALPHA, self.s.blend_factor_source)
+-        self.assertEquals(GL_ONE, self.s.blend_factor_dest)
++        self.assertEqual((32, 32), self.s.texture.size)
++        self.assertEqual(160.55, self.s.emitter_x)
++        self.assertEqual(428.95, self.s.emitter_y)
++        self.assertEqual(104.41, self.s.emitter_x_variance)
++        self.assertEqual(0.00, self.s.emitter_y_variance)
++        self.assertEqual(0.00, self.s.gravity_x)
++        self.assertEqual(0.00, self.s.gravity_y)
++        self.assertEqual(0, self.s.emitter_type)
++        self.assertEqual(300, self.s.max_num_particles)
++        self.assertEqual(2.0, self.s.life_span)
++        self.assertEqual(1.9, self.s.life_span_variance)
++        self.assertEqual(70.0, self.s.start_size)
++        self.assertEqual(49.53, self.s.start_size_variance)
++        self.assertEqual(10.0, self.s.end_size)
++        self.assertEqual(0.0, self.s.end_size_variance)
++        self.assertEqual(math.radians(270.37), self.s.emit_angle)
++        self.assertEqual(math.radians(15.0), self.s.emit_angle_variance)
++        self.assertEqual(0.0, self.s.start_rotation)
++        self.assertEqual(0.0, self.s.start_rotation_variance)
++        self.assertEqual(0.0, self.s.end_rotation)
++        self.assertEqual(0.0, self.s.end_rotation_variance)
++        self.assertEqual(90.0, self.s.speed)
++        self.assertEqual(30.0, self.s.speed_variance)
++        self.assertEqual(0.0, self.s.radial_acceleration)
++        self.assertEqual(0.0, self.s.radial_acceleration_variance)
++        self.assertEqual(0.0, self.s.tangential_acceleration)
++        self.assertEqual(0.0, self.s.tangential_acceleration_variance)
++        self.assertEqual(100.0, self.s.max_radius)
++        self.assertEqual(0.0, self.s.max_radius_variance)
++        self.assertEqual(0.0, self.s.min_radius)
++        self.assertEqual(0.0, self.s.rotate_per_second)
++        self.assertEqual(0.0, self.s.rotate_per_second_variance)
++        self.assertEqual([1.0, 0.31, 0.0, 0.62], self.s.start_color)
++        self.assertEqual([0.0, 0.0, 0.0, 0.0], self.s.start_color_variance)
++        self.assertEqual([1.0, 0.31, 0.0, 0.0], self.s.end_color)
++        self.assertEqual([0.0, 0.0, 0.0, 0.0], self.s.end_color_variance)
++        self.assertEqual(GL_SRC_ALPHA, self.s.blend_factor_source)
++        self.assertEqual(GL_ONE, self.s.blend_factor_dest)
+RefactoringTool: Files that were modified:
+RefactoringTool: C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\run-tests.py
+RefactoringTool: C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\demo\main.py
+RefactoringTool: C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\kivyparticle\__init__.py
+RefactoringTool: C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\kivyparticle\engine.py
+RefactoringTool: C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\kivyparticle\utils.py
+RefactoringTool: C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\test\__init__.py
+RefactoringTool: C:\Users\jgustafson\Documents\GitHub\kivy-particle-py3\test\engine.py
