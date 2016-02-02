@@ -9,7 +9,7 @@ Intentionally forked from old version (skitoo/kivy-particle) instead of later ga
 
 Tested with Kivy 1.9.0 Py3
 
-see also (https://github.com/expertmm/ParticlePandaPy3)[https://github.com/expertmm/ParticlePandaPy3]
+see also https://github.com/expertmm/ParticlePandaPy3
 
 ## Changes
 * (2016-02-02) use pos intead of emitter_x and emitter_y
