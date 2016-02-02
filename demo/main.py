@@ -19,7 +19,7 @@ class DemoParticle(Widget):
     def __init__(self, **kwargs):
         super(DemoParticle, self).__init__(**kwargs)
         self.sun = ParticleSystem('media/sun.pex')
-        self.drugs = ParticleSystem('media/drugs.pex')
+        self.colorspray = ParticleSystem('media/colorspray.pex')
         self.jellyfish = ParticleSystem('media/jellyfish.pex')
         self.fire = ParticleSystem('media/fire.pex')
 
@@ -37,8 +37,8 @@ class DemoParticle(Widget):
     def show_sun(self, b):
         self._show(self.sun)
 
-    def show_drugs(self, b):
-        self._show(self.drugs)
+    def show_colorspray(self, b):
+        self._show(self.colorspray)
 
     def show_jellyfish(self, b):
         self._show(self.jellyfish)
@@ -70,9 +70,9 @@ class DemoParticleApp(App):
         sun.bind(on_press=paint.show_sun)
         buttons.add_widget(sun)
 
-        drugs = Button(text='Drugs')
-        drugs.bind(on_press=paint.show_drugs)
-        buttons.add_widget(drugs)
+        colorspray = Button(text='Color Spray')
+        colorspray.bind(on_press=paint.show_colorspray)
+        buttons.add_widget(colorspray)
 
         jellyfish = Button(text='JellyFish')
         jellyfish.bind(on_press=paint.show_jellyfish)

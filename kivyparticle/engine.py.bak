@@ -110,7 +110,7 @@ class ParticleSystem(Widget):
 
         Clock.schedule_once(self._update, self.update_interval)
 
-    def start(self, duration=sys.maxint):
+    def start(self, duration=sys.maxsize):
         if self.emission_rate != 0:
             self.emission_time = duration
 
@@ -374,7 +374,7 @@ class ParticleSystem(Widget):
 
                 self.frame_time -= time_between_particles
 
-            if self.emission_time != sys.maxint:
+            if self.emission_time != sys.maxsize:
                 self.emission_time = max(0.0, self.emission_time - passed_time)
 
     def _render(self):

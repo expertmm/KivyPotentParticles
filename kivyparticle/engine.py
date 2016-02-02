@@ -160,8 +160,20 @@ class ParticleSystem(Widget):
             self.texture_path = texture_path
 
         self.texture = Image(self.texture_path).texture
-        self.emitter_x = float(self._parse_data('sourcePosition', 'x'))
-        self.emitter_y = float(self._parse_data('sourcePosition', 'y'))
+        #self.emitter_x = 0.0
+        #self.emitter_y = 0.0
+        try_x=None
+        try_y=None
+        if self._has_value('sourcePosition','x'):
+            try_x=self._parse_data('sourcePosition', 'x')
+            try_y=self._parse_data('sourcePosition', 'y')
+        #else ignore -- everything is ok (sourcePosition not present in later versions of pex)
+        #if try_x is not None:
+            #self.emitter_x = float(try_x)
+        #if try_y is not None:
+            #self.emitter_y = float(try_y)
+        if try_x is not None and try_y is not None:
+            self.pos = float(try_x), float(try_y)
         self.emitter_x_variance = float(self._parse_data('sourcePositionVariance', 'x'))
         self.emitter_y_variance = float(self._parse_data('sourcePositionVariance', 'y'))
         self.gravity_x = float(self._parse_data('gravity', 'x'))
@@ -199,7 +211,20 @@ class ParticleSystem(Widget):
         self.blend_factor_dest = self._parse_blend('blendFuncDestination')
 
     def _parse_data(self, name, attribute='value'):
-        return self._config.getElementsByTagName(name)[0].getAttribute(attribute)
+        elements = self._config.getElementsByTagName(name)
+        result=None
+        if (elements is not None) and (len(elements)>0):
+            result=elements[0].getAttribute(attribute)
+        else:
+            print("ERROR: '"+str(name)+"' not found in config ")  # +str(self._config.toxml()))
+        return result
+
+    def _has_value(self, name, attribute='value'):
+        elements = self._config.getElementsByTagName(name)
+        result=False
+        if (elements is not None) and (len(elements)>0):
+            True
+        return result
 
     def _parse_color(self, name):
         return [float(self._parse_data(name, 'red')), float(self._parse_data(name, 'green')), float(self._parse_data(name, 'blue')), float(self._parse_data(name, 'alpha'))]
@@ -232,10 +257,10 @@ class ParticleSystem(Widget):
         particle.current_time = 0.0
         particle.total_time = life_span
 
-        particle.x = random_variance(self.emitter_x, self.emitter_x_variance)
-        particle.y = random_variance(self.emitter_y, self.emitter_y_variance)
-        particle.start_x = self.emitter_x
-        particle.start_y = self.emitter_y
+        particle.x = random_variance(self.pos[0], self.emitter_x_variance)  # first param formerly self.emitter_x
+        particle.y = random_variance(self.pos[1], self.emitter_y_variance)  # first param formerly self.emitter_y
+        particle.start_x = self.pos[0]  # formerly self.emitter_x
+        particle.start_y = self.pos[1]  # formerly self.emitter_x
 
         angle = random_variance(self.emit_angle, self.emit_angle_variance)
         speed = random_variance(self.speed, self.speed_variance)
@@ -280,8 +305,8 @@ class ParticleSystem(Widget):
         if self.emitter_type == EMITTER_TYPE_RADIAL:
             particle.emit_rotation += particle.emit_rotation_delta * passed_time
             particle.emit_radius -= particle.emit_radius_delta * passed_time
-            particle.x = self.emitter_x - math.cos(particle.emit_rotation) * particle.emit_radius
-            particle.y = self.emitter_y - math.sin(particle.emit_rotation) * particle.emit_radius
+            particle.x = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius  # pos formerly self.emitter_x
+            particle.y = self.pos[1] - math.sin(particle.emit_rotation) * particle.emit_radius  # pos formerly self.emitter_y
 
             if particle.emit_radius < self.min_radius:
                 particle.current_time = particle.total_time
