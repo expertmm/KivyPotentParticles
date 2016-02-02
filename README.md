@@ -8,6 +8,9 @@ Kivy Particle is an implementation of [Starling Extension Particle System](https
 Intentionally forked from old version (skitoo/kivy-particle) instead of later garden.particlesystem, to avoid Cython.
 
 Tested with Kivy 1.9.0 Py3
+
+see also (https://github.com/expertmm/ParticlePandaPy3)[https://github.com/expertmm/ParticlePandaPy3]
+
 ## Changes
 * (2016-02-02) use pos intead of emitter_x and emitter_y
 * (2016-02-02) create _has_value method for xml variable existence checking especially for sourcePosition
