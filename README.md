@@ -1,16 +1,11 @@
-#Kivy Particle
-
-Kivy Particle is an implementation of [Starling Extension Particle System](https://github.com/PrimaryFeather/Starling-Extension-Particle-System) for Kivy Python framework.
-
-(Work in Progress)
-
-## Python 3 fork by expertmm
+# KivyPotentParticles
+This 3D fork uses Python 3 is forked from Kivy Particle which is an implementation of [Starling Extension Particle System](https://github.com/PrimaryFeather/Starling-Extension-Particle-System) for Kivy Python framework.
 
 ## Features
 * Intentionally forked from old version (skitoo/kivy-particle) instead of later garden.particlesystem, to avoid Cython.
 * Tested with Kivy 1.9.0 Py3
 
-used in https://github.com/expertmm/ParticlePandaPy3
+used in https://github.com/expertmm/ParticlePandaPy3 and eventually in KivyGlops
 
 ## Changes
 * (2016-01-09) Changed the Rotate transform self.particles_dict[particle]['rotate'] to y axis (was z)
