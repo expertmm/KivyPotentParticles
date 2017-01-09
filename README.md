@@ -4,14 +4,17 @@ Kivy Particle is an implementation of [Starling Extension Particle System](https
 
 (Work in Progress)
 
-# Python 3 fork by expertmm
-Intentionally forked from old version (skitoo/kivy-particle) instead of later garden.particlesystem, to avoid Cython.
+## Python 3 fork by expertmm
 
-Tested with Kivy 1.9.0 Py3
+## Features
+* Intentionally forked from old version (skitoo/kivy-particle) instead of later garden.particlesystem, to avoid Cython.
+* Tested with Kivy 1.9.0 Py3
 
-see also https://github.com/expertmm/ParticlePandaPy3
+used in https://github.com/expertmm/ParticlePandaPy3
 
 ## Changes
+* (2016-01-09) Changed the Rotate transform self.particles_dict[particle]['rotate'] to y axis (was z)
+* (2016-01-09) Changed assertions in test folder to use pos and 0.0
 * (2016-02-02) use pos intead of emitter_x and emitter_y
 * (2016-02-02) create _has_value method for xml variable existence checking especially for sourcePosition
 * (2016-02-01) set emitter_x, emitter_y to (0.0, 0.0) if sourcePosition not found (which doesn't exist in pex files exported by latest ParticlePanda)

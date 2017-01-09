@@ -12,8 +12,8 @@ class TestParticleSystem(unittest.TestCase):
 
     def test_config(self):
         self.assertEqual((32, 32), self.s.texture.size)
-        self.assertEqual(160.55, self.s.emitter_x)
-        self.assertEqual(428.95, self.s.emitter_y)
+        self.assertEqual(0.00, self.s.pos[0])  # formerly 160.55, self.s.emitter_x
+        self.assertEqual(0.00, self.s.pos[1])  # formerly 428.95, self.s.emitter_y
         self.assertEqual(104.41, self.s.emitter_x_variance)
         self.assertEqual(0.00, self.s.emitter_y_variance)
         self.assertEqual(0.00, self.s.gravity_x)

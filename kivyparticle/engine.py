@@ -416,7 +416,7 @@ class ParticleSystem(Widget):
                     PushMatrix()
                     self.particles_dict[particle]['translate'] = Translate()
                     self.particles_dict[particle]['rotate'] = Rotate()
-                    self.particles_dict[particle]['rotate'].set(particle.rotation, 0, 0, 1)
+                    self.particles_dict[particle]['rotate'].set(particle.rotation, 0, 1, 0)
                     self.particles_dict[particle]['rect'] = Quad(texture=self.texture, points=(-size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5,  size[1] * 0.5, -size[0] * 0.5,  size[1] * 0.5))
                     self.particles_dict[particle]['translate'].xy = (particle.x, particle.y)
                     PopMatrix()
