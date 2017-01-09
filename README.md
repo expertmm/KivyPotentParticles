@@ -8,7 +8,7 @@ This 3D fork uses Python 3 is forked from Kivy Particle which is an implementati
 used in https://github.com/expertmm/ParticlePandaPy3 and eventually in KivyGlops
 
 ## Changes
-* (2016-01-09) Changed the Rotate transform self.particles_dict[particle]['rotate'] to y axis (was z)
+* (2016-01-09) Changed the Rotate transform self.particles_dict[particle]['rotate'] to y axis (was z), for use in 3D (Y-up) scenes.
 * (2016-01-09) Changed assertions in test folder to use pos and 0.0
 * (2016-02-02) use pos intead of emitter_x and emitter_y
 * (2016-02-02) create _has_value method for xml variable existence checking especially for sourcePosition
