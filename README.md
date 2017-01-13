@@ -13,6 +13,8 @@ Kivy Particle is an implementation of [Starling Extension Particle System](https
 used in https://github.com/expertmm/ParticlePandaPy3
 
 ## Changes
+* (2016-01-10) Changed rotate instruction to use spin_matrix instead of hard-codex y value (and added set_mode_3d and set_mode_2d to change spin_matrix between 0,1,0 for y-up 3d and 0,0,1 for spinning on screen 2d respectively)
+* (2016-01-10) Changed 'Particle: COMPLETE' to 'Particle: nothing to do (num_particles==0)' and dedented it so it would actually have a chance of happening
 * (2016-01-09) Changed the Rotate transform self.particles_dict[particle]['rotate'] to y axis (was z)
 * (2016-01-09) Changed assertions in test folder to use pos and 0.0
 * (2016-02-02) use pos intead of emitter_x and emitter_y
