@@ -34,7 +34,9 @@ BLEND_FUNC = {0: GL_ZERO,
 
 
 class Particle(object):
-    x, y, rotation, current_time = -256, -256, 0, 0
+    pos = (-256,-256,-256)
+    rotation = 0
+    current_time = 0
     scale, total_time = 1.0, 0.
     color = [1.0, 1.0, 1.0, 1.0]
     color_delta = [0.0, 0.0, 0.0, 0.0]
@@ -46,6 +48,7 @@ class Particle(object):
 
 
 class ParticleSystem(Widget):
+    dim_count = NumericProperty(3)
     max_num_particles = NumericProperty(200)
     life_span = NumericProperty(2)
     texture = ObjectProperty(None)
@@ -80,6 +83,7 @@ class ParticleSystem(Widget):
     start_color_variance = ListProperty([1., 1., 1., 1.])
     end_color = ListProperty([1., 1., 1., 1.])
     end_color_variance = ListProperty([1., 1., 1., 1.])
+    spin_matrix = ListProperty([0,1,0])
     blend_factor_source = NumericProperty(770)
     blend_factor_dest = NumericProperty(1)
     emitter_type = NumericProperty(0)
@@ -257,8 +261,10 @@ class ParticleSystem(Widget):
         particle.current_time = 0.0
         particle.total_time = life_span
 
-        particle.x = random_variance(self.pos[0], self.emitter_x_variance)  # first param formerly self.emitter_x
-        particle.y = random_variance(self.pos[1], self.emitter_y_variance)  # first param formerly self.emitter_y
+        if self.dim_count == 3:
+            particle.pos = random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], self.emitter_y_variance), random_variance(self.pos[2], self.emitter_x_variance)
+        else:
+            particle.pos = random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], pos[2]
         particle.start_x = self.pos[0]  # formerly self.emitter_x
         particle.start_y = self.pos[1]  # formerly self.emitter_x
 
@@ -305,8 +311,10 @@ class ParticleSystem(Widget):
         if self.emitter_type == EMITTER_TYPE_RADIAL:
             particle.emit_rotation += particle.emit_rotation_delta * passed_time
             particle.emit_radius -= particle.emit_radius_delta * passed_time
-            particle.x = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius  # pos formerly self.emitter_x
-            particle.y = self.pos[1] - math.sin(particle.emit_rotation) * particle.emit_radius  # pos formerly self.emitter_y
+            if self.dim_count == 3:
+                self.pos = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius, self.pos[1], self.pos[2] - math.sin(particle.emit_rotation) * particle.emit_radius
+            else:
+                self.pos = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius, self.pos[1] - math.sin(particle.emit_rotation) * particle.emit_radius, self.pos[2]
 
             if particle.emit_radius < self.min_radius:
                 particle.current_time = particle.total_time
@@ -379,8 +387,8 @@ class ParticleSystem(Widget):
                     self.particles[self.num_particles - 1] = particle
                     self.particles[particle_index] = next_particle
                 self.num_particles -= 1
-                if self.num_particles == 0:
-                    Logger.debug('Particle: COMPLETE')
+        if self.num_particles == 0:
+            Logger.debug('Particle: nothing to do (num_particles==0)')
 
         # create and advance new particles
         if self.emission_time > 0:
@@ -402,6 +410,14 @@ class ParticleSystem(Widget):
             if self.emission_time != sys.maxsize:
                 self.emission_time = max(0.0, self.emission_time - passed_time)
 
+    def set_mode_3d():
+        self.spin_matrix = [0,1,0]  # spin on y-axis since assuming 3D with y-up
+        self.dim_count = 3
+
+    def set_mode_2d():
+        self.spin_matrix=[0,0,1]  # spin on z-axis to move on screen plane
+        self.dim_count = 2
+        
     def _render(self):
         if self.num_particles == 0:
             return
@@ -416,7 +432,7 @@ class ParticleSystem(Widget):
                     PushMatrix()
                     self.particles_dict[particle]['translate'] = Translate()
                     self.particles_dict[particle]['rotate'] = Rotate()
-                    self.particles_dict[particle]['rotate'].set(particle.rotation, 0, 1, 0)
+                    self.particles_dict[particle]['rotate'].set(particle.rotation, self.spin_matrix[0], self.spin_matrix[1], self.spin_matrix[2])
                     self.particles_dict[particle]['rect'] = Quad(texture=self.texture, points=(-size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5,  size[1] * 0.5, -size[0] * 0.5,  size[1] * 0.5))
                     self.particles_dict[particle]['translate'].xy = (particle.x, particle.y)
                     PopMatrix()
