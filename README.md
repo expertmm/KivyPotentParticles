@@ -8,7 +8,10 @@ used in https://github.com/expertmm/ParticlePandaPy3 and eventually in KivyGlops
 
 ## Known Issues
 * ParticlePandaPy3 cannot yet use KivyPotentParticles to produce 3D results
-* Changes for 3D were reverted for unknown reason (seems to be human error using git) -- see the commit that was lost: https://github.com/expertmm/KivyPotentParticles/commit/7be0058dbba854a9b73ee60d237c921378be0e6e
+* Changes for 3D were reverted for unknown reason (seems to be human error using git) -- see the commit that was lost: https://github.com/expertmm/KivyPotentParticles/commit/7be0058dbba854a9b73ee60d237c921378be0e6e -- see also ParticlePandaPy3
+
+## Planned Features
+* make rotation have 3 axes (change to 3 transforms, and add methods for changing rotation of each)
 
 
 
