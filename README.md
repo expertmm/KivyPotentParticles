@@ -1,11 +1,17 @@
 # KivyPotentParticles
 This 3D fork uses Python 3 is forked from Kivy Particle which is an implementation of [Starling Extension Particle System](https://github.com/PrimaryFeather/Starling-Extension-Particle-System) for Kivy Python framework.
+used in https://github.com/expertmm/ParticlePandaPy3 and eventually in KivyGlops
 
 ## Features
 * Intentionally forked from old version (skitoo/kivy-particle) instead of later garden.particlesystem, to avoid Cython.
 * Tested with Kivy 1.9.0 Py3
 
-used in https://github.com/expertmm/ParticlePandaPy3 and eventually in KivyGlops
+## Known Issues
+* ParticlePandaPy3 cannot yet use KivyPotentParticles to produce 3D results
+* Changes for 3D were reverted for unknown reason (seems to be human error using git) -- see the commit that was lost: https://github.com/expertmm/KivyPotentParticles/commit/7be0058dbba854a9b73ee60d237c921378be0e6e
+
+
+
 
 ## Changes
 * (2016-01-10) Changed rotate instruction to use spin_matrix instead of hard-codex y value (and added set_mode_3d and set_mode_2d to change spin_matrix between 0,1,0 for y-up 3d and 0,0,1 for spinning on screen 2d respectively)
