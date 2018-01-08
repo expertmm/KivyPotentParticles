@@ -21,6 +21,10 @@ used in https://github.com/expertmm/ParticlePandaPy3 and eventually may be used 
 * You can now specify dim_count (2 or 3 for 2D or 3D mode) for ParticleSystem constructor
 * removed `start_x, start_y, velocity_x, velocity_y` from Particle in favor of start and velocity dimension lists
 * (moved Particle members' initialization from class member definition to __init__ to ensure values aren't shared between particles) fix particle jumpiness
+* demo/media/fire.pex: improved fire color and gravity
+  * kivyparticle/engine.py: can now read and utilize `finishGravity` (x, y, and optionally z) (feature specific to KivyPotentParticles) if present in pex file (also `gravity_delta` cached during `_init_particle` for faster processing--for each particle, since varies depending on particle life)
+  * kivyparticle/engine.py: renamed gravity list (formerly gravity_x, gravity_y) to start_gravity and added per-particle gravity
+* kivyparticle/engine.py repaired ParticleSystem _has_value (it was never working before apparently)
 (2018-01-07)
 * kivyparticle/engine.py: fixed old bug with unfinished line for 3D mode
 (2016-01-10)
@@ -41,3 +45,4 @@ used in https://github.com/expertmm/ParticlePandaPy3 and eventually may be used 
 ## Developer Notes
 * additive blending is done via `glBlendFunc(GL_SRC_ALPHA, GL_ONE)` via `_set_blend_func` which is added to canvas.before (after drawing is done, `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)` is done via `_reset_blend_func` which is added to canvas.after)
 * tangent_acceleration is acceleration from center
+* sun, colorspray, jellyfish, and fire are all emitterType 0 (EMITTER_TYPE_GRAVITY)

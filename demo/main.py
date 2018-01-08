@@ -23,9 +23,10 @@ class DemoParticle(Widget):
         self.systems = {}
         self.create_particle_systems(self.dim_count)
         self.current = None
-        Clock.schedule_once(self._app_loaded, .5)
-        #If _show is called earlier (even .1), window size may not be
-        # calculated yet and therefore object will not be centered. 
+        Clock.schedule_once(self._app_loaded, 1.0)
+        #If _show is called earlier (such as after .1, or .5 on some
+        # computers), window size may not be calculated yet and
+        # therefore object will not be centered. 
         
     def _app_loaded(self, dt):
         #dt is passed time according to kivy-particle (kivyparticle/engine.py)

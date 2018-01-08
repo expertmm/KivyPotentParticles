@@ -70,8 +70,8 @@ class ParticleSystem(Widget):
     end_rotation_variance = NumericProperty(0)
     emitter_x_variance = NumericProperty(100)
     emitter_y_variance = NumericProperty(100)
-    gravity_x = NumericProperty(0)
-    gravity_y = NumericProperty(0)
+    start_gravity = ListProperty([0.,0.,0.])
+    end_gravity = ListProperty([0.,0.,0.])
     speed = NumericProperty(0)
     speed_variance = NumericProperty(0)
     radial_acceleration = NumericProperty(100)
@@ -114,6 +114,7 @@ class ParticleSystem(Widget):
         self.initial_capacity = self.max_num_particles
         self.max_capacity = self.max_num_particles
         self._raise_capacity(self.initial_capacity)
+        self.emitter_z_variance = None
 
         with self.canvas.before:
             Callback(self._set_blend_func)
@@ -187,8 +188,11 @@ class ParticleSystem(Widget):
         if self._has_value('sourcePosition','z'):
             try_z = self._parse_data('sourcePosition', 'z')
         else:
-            #reuse x to make 2D pex files compatible with 3D mode:
-            try_z = try_x
+            if self.dim_count > 2:
+                try_z = try_y  #xz as ground plane to use 2D pex in 3D
+                try_y = 0.0  # on ground
+            else:
+                try_z = 0.0
         #else ignore -- everything is ok (sourcePosition not present in later versions of pex)
         #if try_x is not None:
             #self.emitter_x = float(try_x)
@@ -199,11 +203,44 @@ class ParticleSystem(Widget):
                 self.pos = [ float(try_x), float(try_y), float(try_z) ]
         else:
             if try_x is not None and try_y is not None:
-                self.pos = [ float(try_x), float(try_y) ]
+                #ListProperty must remain same len or exception occurs:
+                self.pos[0] = float(try_x)
+                self.pos[1] = float(try_y)
         self.emitter_x_variance = float(self._parse_data('sourcePositionVariance', 'x'))
         self.emitter_y_variance = float(self._parse_data('sourcePositionVariance', 'y'))
-        self.gravity_x = float(self._parse_data('gravity', 'x'))
-        self.gravity_y = float(self._parse_data('gravity', 'y'))
+        if self._has_value('sourcePositionVariance','z'):
+            self.emitter_z_variance = float(self._parse_data('sourcePositionVariance', 'z'))
+        else:
+            self.emitter_z_variance = None
+        self.start_gravity[0] = float(self._parse_data('gravity', 'x'))
+        self.start_gravity[1] = float(self._parse_data('gravity', 'y'))
+        if self.dim_count > 2:
+            if self._has_value('gravity','z'):
+                self.start_gravity[2] = float(self._parse_data('gravity', 'z'))
+            else:
+                self.start_gravity[1] = float(self._parse_data('gravity', 'y'))
+                #reuse x for ground dim z to make 2D pex work with 3D:
+                self.start_gravity[2] = float(self._parse_data('gravity', 'x'))            
+
+        if self._has_value('finishGravity','x'):
+            self.end_gravity[0] = float(self._parse_data('finishGravity', 'x'))
+        else:
+            self.end_gravity[0] = self.start_gravity[0]
+        if self._has_value('finishGravity','y'):
+            self.end_gravity[1] = float(self._parse_data('finishGravity', 'y'))
+            print("using finishGravity " + str(self.end_gravity[0]) + ", " + str(self.end_gravity[1]))  # debug only
+        else:
+            self.end_gravity[1] = self.start_gravity[1]
+            print("no finishGravity")
+        if self._has_value('finishGravity','z'):
+            self.end_gravity[2] = float(self._parse_data('finishGravity', 'z'))
+        else:
+            self.end_gravity[2] = self.start_gravity[2]
+        
+        
+
+
+
         self.emitter_type = int(self._parse_data('emitterType'))
         self.max_num_particles = int(self._parse_data('maxParticles'))
         self.life_span = max(0.01, float(self._parse_data('particleLifeSpan')))
@@ -238,19 +275,33 @@ class ParticleSystem(Widget):
 
     def _parse_data(self, name, attribute='value'):
         elements = self._config.getElementsByTagName(name)
-        result=None
+        result = None
         if (elements is not None) and (len(elements)>0):
-            result=elements[0].getAttribute(attribute)
+            result = elements[0].getAttribute(attribute)
         else:
-            print("ERROR: '"+str(name)+"' not found in config ")  # +str(self._config.toxml()))
+            print("ERROR: '" + str(name) + "' not found in config ")
+            # +str(self._config.toxml()))
         return result
 
-    def _has_value(self, name, attribute='value'):
-        elements = self._config.getElementsByTagName(name)
-        result=False
-        if (elements is not None) and (len(elements)>0):
-            True
-        return result
+    def _has_value(self, name, attribute=None):
+        if attribute is None:
+            elements = self._config.getElementsByTagName(name)
+            result = False
+            if (elements is not None) and (len(elements)>0):
+                True
+            return result
+        else:
+            elements = self._config.getElementsByTagName(name)
+            result = False
+            if (elements is not None) and (len(elements)>0):
+                tmp = elements[0].getAttribute(attribute)
+                if (tmp is not None) and (tmp != ""):
+                    print("[ ParticleSystem ] (verbose message) _has_value got " + name + "." + str(attribute) + ": " + tmp) 
+                    result = True
+            else:
+                print("ERROR: '"+str(name)+"' not found in config ")  # +str(self._config.toxml()))
+            return result
+            
 
     def _parse_color(self, name):
         return [float(self._parse_data(name, 'red')), float(self._parse_data(name, 'green')), float(self._parse_data(name, 'blue')), float(self._parse_data(name, 'alpha'))]
@@ -282,24 +333,31 @@ class ParticleSystem(Widget):
 
         particle.current_time = 0.0
         particle.total_time = life_span
+        H_AXIS_I = 1  # secondary ground axis (where x aka 0 is primary)
+        V_AXIS_I = 1  # vertical axis
+        if self.dim_count > 2:
+            H_AXIS_I = 2  # ground is xz plane in 3D mode
 
         if self.dim_count > 2:
             particle.pos[0] = random_variance(self.pos[0], self.emitter_x_variance)
             particle.pos[1] = random_variance(self.pos[1], self.emitter_y_variance)
-            #reuse x in 3D mode:
-            particle.pos[2] = random_variance(self.pos[2], self.emitter_x_variance)
+            if self.emitter_z_variance is not None:
+                particle.pos[H_AXIS_I] = random_variance(self.pos[H_AXIS_I], self.emitter_z_variance)
+            else:
+                #reuse x in 3D mode for other ground axis:
+                particle.pos[H_AXIS_I] = random_variance(self.pos[H_AXIS_I], self.emitter_x_variance)
             particle.start[2] = self.pos[2]
         else:
             particle.pos[0] = random_variance(self.pos[0], self.emitter_x_variance)
             particle.pos[1] = random_variance(self.pos[1], self.emitter_y_variance)
         particle.start[0] = self.pos[0]  # formerly self.emitter_x
-        particle.start[1] = self.pos[1]  # formerly self.emitter_x
-        #2 is done above in `dim_count > 2` case
+        particle.start[1] = self.pos[1]  # formerly self.emitter_y
+        #particle.start[2] is done above in `dim_count > 2` case
 
         angle = random_variance(self.emit_angle, self.emit_angle_variance)
         speed = random_variance(self.speed, self.speed_variance)
         particle.velocity[0] = speed * math.cos(angle)
-        particle.velocity[1] = speed * math.sin(angle)
+        particle.velocity[H_AXIS_I] = speed * math.sin(angle)
 
         particle.emit_radius = random_variance(self.max_radius, self.max_radius_variance)
         particle.emit_radius_delta = (self.max_radius - self.min_radius) / life_span
@@ -325,6 +383,11 @@ class ParticleSystem(Widget):
 
         particle.color_delta = [(end_color[i] - start_color[i]) / life_span for i in range(4)]
         particle.color = start_color
+        
+        # gravity delta
+        particle.gravity = [self.start_gravity[i] for i in range(self.dim_count)]
+        particle.gravity_delta = [(self.end_gravity[i] - self.start_gravity[i]) / life_span for i in range(self.dim_count)]
+        #print("gravity_delta[1] = (" + str(self.end_gravity[1]) + " - " + str(self.start_gravity[1]) + ") / " + str(life_span))  # debug only
 
         # rotation
         start_rotation = random_variance(self.start_rotation, self.start_rotation_variance)
@@ -333,60 +396,64 @@ class ParticleSystem(Widget):
         particle.rotation_delta = (end_rotation - start_rotation) / life_span
 
     def _advance_particle(self, particle, passed_time):
+        H_AXIS_I = 1  # secondary ground axis (where x aka 0 is primary)
+        V_AXIS_I = 1  # vertical axis
+        if self.dim_count > 2:
+            # rotate around y in 3D mode (uses z as 2nd ground axis):
+            H_AXIS_I = 2  # ground is xz plane in 3D mode
         passed_time = min(passed_time, particle.total_time - particle.current_time)
         particle.current_time += passed_time
+
         if self.emitter_type == EMITTER_TYPE_RADIAL:
             particle.emit_rotation += particle.emit_rotation_delta * passed_time
             particle.emit_radius -= particle.emit_radius_delta * passed_time
             particle.pos[0] = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius
-            if self.dim_count > 2:
-                #should rotate around y in 3D mode:
-                particle.pos[2] = self.pos[2] - math.sin(particle.emit_rotation) * particle.emit_radius
-            else:
-                particle.pos[1] = self.pos[1] - math.sin(particle.emit_rotation) * particle.emit_radius
-
+            particle.pos[V_AXIS_I] = self.pos[V_AXIS_I]
+            particle.pos[H_AXIS_I] = self.pos[H_AXIS_I] - math.sin(particle.emit_rotation) * particle.emit_radius
             if particle.emit_radius < self.min_radius:
                 particle.current_time = particle.total_time
-
         else:
             distance = [0., 0., 0.]
             for i in range(self.dim_count):
                 distance[i] = particle.pos[i] - particle.start[i]
-            if self.dim_count > 2:
-                #rotate around y in 3D mode, so delta is in z not y:
-                distance_scalar = math.sqrt(distance[0] * distance[0] + distance[2] * distance[2])
-            else:
-                distance_scalar = math.sqrt(distance[0] * distance[0] + distance[1] * distance[1])
+            distance_scalar = math.sqrt(distance[0] * distance[0] + distance[H_AXIS_I] * distance[H_AXIS_I])
             if distance_scalar < 0.01:
                 distance_scalar = 0.01
 
             radial = [0., 0., 0.]
             tangential = [0., 0., 0.]
-            for i in range(self.dim_count):
-                radial[i] = distance[i] / distance_scalar
-                tangential[i] = radial[i]
+            new_pos = [0., 0., 0.]  # formerly new_y
+            
+            #for i in range(self.dim_count):
+            #    radial[i] = distance[i] / distance_scalar
+            #    tangential[i] = radial[i]
+            # use only ground axes:
+            radial[0] = distance[0] / distance_scalar
+            radial[H_AXIS_I] = distance[H_AXIS_I] / distance_scalar
+            tangential[0] = radial[0]
+            tangential[H_AXIS_I] = radial[H_AXIS_I]
 
             radial[0] *= particle.radial_acceleration
-            new_pos = [0., 0., 0.]  # formerly new_y
-            if self.dim_count > 2:
-                #move away from y axis if 3D:
-                radial[2] *= particle.radial_acceleration
-                new_pos[2] = tangential[0]
-                tangential[0] = -tangential[1] * particle.tangent_acceleration
-                tangential[2] = new_pos[2] * particle.tangent_acceleration
-            else:
-                radial[1] *= particle.radial_acceleration
-                new_pos[1] = tangential[0]
-                tangential[0] = -tangential[1] * particle.tangent_acceleration
-                tangential[1] = new_pos[1] * particle.tangent_acceleration
-
+            radial[H_AXIS_I] *= particle.radial_acceleration
             
-            gravity = [0., 0., 0.]
-            gravity[0] = self.gravity_x
-            gravity[1] = self.gravity_y
+            new_pos[H_AXIS_I] = tangential[0]
+            tangential[0] = -tangential[H_AXIS_I] * particle.tangent_acceleration
+            tangential[H_AXIS_I] = new_pos[H_AXIS_I] * particle.tangent_acceleration
+
+            #gravity = [0., 0., 0.]
+            
+            #NOTE: gravity is already processed for dim_count on load
+            #gravity[0] = self.gravity[0]
+            #if self.gravity_z is not None:
+            #    gravity[H_AXIS_I] = self.gravity_z
+            #else:
+            #    gravity[H_AXIS_I] = self.gravity_x
+            #gravity[V_AXIS_I] = self.gravity_y
             
             for i in range(self.dim_count):
-                particle.velocity[i] += passed_time * (gravity[i] + radial[i] + tangential[i])
+                particle.gravity[i] += particle.gravity_delta[i] * passed_time
+                #print("particle.gravity[" + str(i) + "]: " + str(particle.gravity[i]) + " += " + str(particle.gravity_delta[i]) + " * " + str(passed_time))
+                particle.velocity[i] += passed_time * (particle.gravity[i] + radial[i] + tangential[i])
                 particle.pos[i] += particle.velocity[i] * passed_time
 
         particle.scale += particle.scale_delta * passed_time
