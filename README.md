@@ -13,9 +13,6 @@ used in https://github.com/expertmm/ParticlePandaPy3 and eventually in KivyGlops
 ## Planned Features
 * make rotation have 3 axes (change to 3 transforms, and add methods for changing rotation of each)
 
-
-
-
 ## Changes
 * (2016-01-10) Changed rotate instruction to use spin_matrix instead of hard-codex y value (and added set_mode_3d and set_mode_2d to change spin_matrix between 0,1,0 for y-up 3d and 0,0,1 for spinning on screen 2d respectively)
 * (2016-01-10) Changed 'Particle: COMPLETE' to 'Particle: nothing to do (num_particles==0)' and dedented it so it would actually have a chance of happening

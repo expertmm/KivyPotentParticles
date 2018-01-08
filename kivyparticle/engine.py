@@ -264,7 +264,7 @@ class ParticleSystem(Widget):
         if self.dim_count == 3:
             particle.pos = random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], self.emitter_y_variance), random_variance(self.pos[2], self.emitter_x_variance)
         else:
-            particle.pos = random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], pos[2]
+            particle.pos = random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], self.emitter_y_variance)
         particle.start_x = self.pos[0]  # formerly self.emitter_x
         particle.start_y = self.pos[1]  # formerly self.emitter_x
 
