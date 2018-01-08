@@ -11,51 +11,78 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-
+from kivy.clock import Clock
 from kivyparticle import ParticleSystem
 
 
 class DemoParticle(Widget):
+    
     def __init__(self, **kwargs):
         super(DemoParticle, self).__init__(**kwargs)
-        self.sun = ParticleSystem('media/sun.pex')
-        self.colorspray = ParticleSystem('media/colorspray.pex')
-        self.jellyfish = ParticleSystem('media/jellyfish.pex')
-        self.fire = ParticleSystem('media/fire.pex')
-
+        self.dim_count = 2
+        self.systems = {}
+        self.create_particle_systems(self.dim_count)
         self.current = None
-        self._show(self.sun)
+        Clock.schedule_once(self._app_loaded, .5)
+        #If _show is called earlier (even .1), window size may not be
+        # calculated yet and therefore object will not be centered. 
+        
+    def _app_loaded(self, dt):
+        #dt is passed time according to kivy-particle (kivyparticle/engine.py)
+        self._show("sun")
+        
+        
+    def create_particle_systems(self, d):
+        self.systems["sun"] = ParticleSystem('media/sun.pex', dim_count=d)
+        self.systems["colorspray"] = ParticleSystem('media/colorspray.pex', dim_count=d)
+        self.systems["jellyfish"] = ParticleSystem('media/jellyfish.pex', dim_count=d)
+        self.systems["fire"] = ParticleSystem('media/fire.pex', dim_count=d)
 
     def on_touch_down(self, touch):
-        self.current.emitter_x = float(touch.x)
-        self.current.emitter_y = float(touch.y)
+        self.current.pos[0] = float(touch.x)
+        self.current.pos[1] = float(touch.y)
 
     def on_touch_move(self, touch):
-        self.current.emitter_x = float(touch.x)
-        self.current.emitter_y = float(touch.y)
+        self.current.pos[0] = float(touch.x)
+        self.current.pos[1] = float(touch.y)
 
     def show_sun(self, b):
-        self._show(self.sun)
+        self._show("sun")
 
     def show_colorspray(self, b):
-        self._show(self.colorspray)
+        self._show("colorspray")
 
     def show_jellyfish(self, b):
-        self._show(self.jellyfish)
+        self._show("jellyfish")
 
     def show_fire(self, b):
-        self._show(self.fire)
+        self._show("fire")
+    
+    def toggle_dimensions(self, instance):
+        if self.dim_count == 2:
+            self.dim_count = 3
+        else:
+            self.dim_count = 2
+        self.create_particle_systems(self.dim_count)
+        self.mode_button.text = 'Mode is ' + str(self.dim_count) + \
+                                 "D\n(click to change)"
+        prev_system_name = self.current_name
+        self._show(None)
+        self._show(prev_system_name)
 
-    def _show(self, system):
+    def _show(self, name):
         if self.current:
             self.remove_widget(self.current)
             self.current.stop(True)
-        self.current = system
-
-        self.current.emitter_x = 300.0
-        self.current.emitter_y = 300.0
-        self.add_widget(self.current)
-        self.current.start()
+        self.current_name = name
+        if name is not None:
+            self.current = self.systems[name]
+            self.current.pos[0] = self.width/2.  # 300.0
+            self.current.pos[1] = self.height/2.  # 300
+            self.add_widget(self.current)
+            self.current.start()
+        else:
+            self.current = None
 
 
 class DemoParticleApp(App):
@@ -81,6 +108,11 @@ class DemoParticleApp(App):
         fire = Button(text='Fire')
         fire.bind(on_press=paint.show_fire)
         buttons.add_widget(fire)
+
+        paint.mode_button = Button(text='Mode is ' + str(paint.dim_count) + \
+                                   "D\n(click to change)")
+        paint.mode_button.bind(on_press=paint.toggle_dimensions)
+        buttons.add_widget(paint.mode_button)
 
         return root
 

@@ -48,7 +48,8 @@ class Particle(object):
 
 
 class ParticleSystem(Widget):
-    dim_count = NumericProperty(3)
+    pos = ListProperty([0.0,0.0,0.0])  # emitter_x, emitter_y
+    dim_count = NumericProperty(2)
     max_num_particles = NumericProperty(200)
     life_span = NumericProperty(2)
     texture = ObjectProperty(None)
@@ -93,6 +94,10 @@ class ParticleSystem(Widget):
 
     def __init__(self, config, **kwargs):
         super(ParticleSystem, self).__init__(**kwargs)
+        for name, value in kwargs.items():
+            if name=="dim_count":
+                self.dim_count=int(value)
+                print("[ ParticleSystem ] (verbose message) __init__: caller set dimensions to " + str(self.dim_count))
         self.capacity = 0
         self.particles = list()
         self.particles_dict = dict()
@@ -166,18 +171,32 @@ class ParticleSystem(Widget):
         self.texture = Image(self.texture_path).texture
         #self.emitter_x = 0.0
         #self.emitter_y = 0.0
-        try_x=None
-        try_y=None
+        try_x = None
+        try_y = None
+        try_z = None
         if self._has_value('sourcePosition','x'):
-            try_x=self._parse_data('sourcePosition', 'x')
-            try_y=self._parse_data('sourcePosition', 'y')
+            try_x = self._parse_data('sourcePosition', 'x')
+            if self._has_value('sourcePosition','y'):
+                try_y = self._parse_data('sourcePosition', 'y')
+            else:
+                print("[ ParticleSystem ] (INPUT ERROR) pex has x but no y")
+                try_y = try_x
+        if self._has_value('sourcePosition','z'):
+            try_z = self._parse_data('sourcePosition', 'z')
+        else:
+            #reuse x to make 2D pex files compatible with 3D mode:
+            try_z = try_x
         #else ignore -- everything is ok (sourcePosition not present in later versions of pex)
         #if try_x is not None:
             #self.emitter_x = float(try_x)
         #if try_y is not None:
             #self.emitter_y = float(try_y)
-        if try_x is not None and try_y is not None:
-            self.pos = float(try_x), float(try_y)
+        if self.dim_count>2:
+            if try_x is not None and try_y is not None:
+                self.pos = [ float(try_x), float(try_y), float(try_z) ]
+        else:
+            if try_x is not None and try_y is not None:
+                self.pos = [ float(try_x), float(try_y) ]
         self.emitter_x_variance = float(self._parse_data('sourcePositionVariance', 'x'))
         self.emitter_y_variance = float(self._parse_data('sourcePositionVariance', 'y'))
         self.gravity_x = float(self._parse_data('gravity', 'x'))
@@ -262,9 +281,9 @@ class ParticleSystem(Widget):
         particle.total_time = life_span
 
         if self.dim_count == 3:
-            particle.pos = random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], self.emitter_y_variance), random_variance(self.pos[2], self.emitter_x_variance)
+            particle.pos = [ random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], self.emitter_y_variance), random_variance(self.pos[2], self.emitter_x_variance) ]
         else:
-            particle.pos = random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], self.emitter_y_variance)
+            particle.pos = [ random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], self.emitter_y_variance) ]
         particle.start_x = self.pos[0]  # formerly self.emitter_x
         particle.start_y = self.pos[1]  # formerly self.emitter_x
 
@@ -307,21 +326,23 @@ class ParticleSystem(Widget):
     def _advance_particle(self, particle, passed_time):
         passed_time = min(passed_time, particle.total_time - particle.current_time)
         particle.current_time += passed_time
-
         if self.emitter_type == EMITTER_TYPE_RADIAL:
             particle.emit_rotation += particle.emit_rotation_delta * passed_time
             particle.emit_radius -= particle.emit_radius_delta * passed_time
-            if self.dim_count == 3:
-                self.pos = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius, self.pos[1], self.pos[2] - math.sin(particle.emit_rotation) * particle.emit_radius
-            else:
-                self.pos = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius, self.pos[1] - math.sin(particle.emit_rotation) * particle.emit_radius, self.pos[2]
+            particle.pos[0] = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius
+            particle.pos[1] = self.pos[1] - math.sin(particle.emit_rotation) * particle.emit_radius
+            if self.dim_count > 2:
+                particle.pos[2] = self.pos[2] - math.sin(particle.emit_rotation) * particle.emit_radius
 
             if particle.emit_radius < self.min_radius:
                 particle.current_time = particle.total_time
 
         else:
-            distance_x = particle.x - particle.start_x
-            distance_y = particle.y - particle.start_y
+            distance_x = particle.pos[0] - particle.start_x
+            distance_y = particle.pos[1] - particle.start_y
+            distance_z = None
+            if self.dim_count > 2:
+                distance_z = particle.pos[2]
             distance_scalar = math.sqrt(distance_x * distance_x + distance_y * distance_y)
             if distance_scalar < 0.01:
                 distance_scalar = 0.01
@@ -341,8 +362,11 @@ class ParticleSystem(Widget):
             particle.velocity_x += passed_time * (self.gravity_x + radial_x + tangential_x)
             particle.velocity_y += passed_time * (self.gravity_y + radial_y + tangential_y)
 
-            particle.x += particle.velocity_x * passed_time
-            particle.y += particle.velocity_y * passed_time
+            particle.pos[0] += particle.velocity_x * passed_time
+            particle.pos[1] += particle.velocity_y * passed_time
+            if self.dim_count > 2:
+                #reuse x to make 2D pex files compatible with 3D:
+                particle.pos[2] += particle.velocity_x * passed_time
 
         particle.scale += particle.scale_delta * passed_time
         particle.rotation += particle.rotation_delta * passed_time
@@ -434,10 +458,16 @@ class ParticleSystem(Widget):
                     self.particles_dict[particle]['rotate'] = Rotate()
                     self.particles_dict[particle]['rotate'].set(particle.rotation, self.spin_matrix[0], self.spin_matrix[1], self.spin_matrix[2])
                     self.particles_dict[particle]['rect'] = Quad(texture=self.texture, points=(-size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5,  size[1] * 0.5, -size[0] * 0.5,  size[1] * 0.5))
-                    self.particles_dict[particle]['translate'].xy = (particle.x, particle.y)
+                    if self.dim_count > 2:
+                        self.particles_dict[particle]['translate'].xyz = (particle.pos[0], particle.pos[1], particle.pos[2])
+                    else:
+                        self.particles_dict[particle]['translate'].xy = (particle.pos[0], particle.pos[1])
                     PopMatrix()
             else:
                 self.particles_dict[particle]['rotate'].angle = particle.rotation
-                self.particles_dict[particle]['translate'].xy = (particle.x, particle.y)
+                if self.dim_count > 2:
+                    self.particles_dict[particle]['translate'].xyz = (particle.pos[0], particle.pos[1], particle.pos[2])
+                else:
+                    self.particles_dict[particle]['translate'].xy = (particle.pos[0], particle.pos[1])                
                 self.particles_dict[particle]['color'].rgba = particle.color
                 self.particles_dict[particle]['rect'].points = (-size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5,  size[1] * 0.5, -size[0] * 0.5,  size[1] * 0.5)
