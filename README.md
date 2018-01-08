@@ -4,7 +4,7 @@ used in https://github.com/expertmm/ParticlePandaPy3 and eventually may be used 
 
 ## Features
 * Intentionally forked from old version (skitoo/kivy-particle) instead of later garden.particlesystem, to avoid Cython.
-* Tested with Kivy 1.9.0 Py3
+* Tested with Kivy 1.10.0 for python3
 
 ## Planned Features
 * make rotation have 3 axes (change to 3 transforms, and add methods for changing rotation of each)
@@ -17,6 +17,10 @@ used in https://github.com/expertmm/ParticlePandaPy3 and eventually may be used 
 ## Changes
 (2018-01-08)
 * kivyparticle/engine.py: added more checks for 3D; ParticleSystem now has 3D pos instead of inherited pos which has immutable length of 2; _advance_particle corrected to modify particle.pos instead of self.pos
+* demo/main.py: delayed start of demo so that it knows layout size (for proper centering)
+* You can now specify dim_count (2 or 3 for 2D or 3D mode) for ParticleSystem constructor
+* removed `start_x, start_y, velocity_x, velocity_y` from Particle in favor of start and velocity dimension lists
+* (moved Particle members' initialization from class member definition to __init__ to ensure values aren't shared between particles) fix particle jumpiness
 (2018-01-07)
 * kivyparticle/engine.py: fixed old bug with unfinished line for 3D mode
 (2016-01-10)
@@ -34,3 +38,6 @@ used in https://github.com/expertmm/ParticlePandaPy3 and eventually may be used 
 * added existence check in _parse_data for variable before trying to get its value
 * set emitter_x, emitter_y to (0.0, 0.0) if sourcePosition not found (which doesn't exist in pex files exported by latest ParticlePanda)
 
+## Developer Notes
+* additive blending is done via `glBlendFunc(GL_SRC_ALPHA, GL_ONE)` via `_set_blend_func` which is added to canvas.before (after drawing is done, `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)` is done via `_reset_blend_func` which is added to canvas.after)
+* tangent_acceleration is acceleration from center

@@ -34,17 +34,20 @@ BLEND_FUNC = {0: GL_ZERO,
 
 
 class Particle(object):
-    pos = (-256,-256,-256)
-    rotation = 0
-    current_time = 0
-    scale, total_time = 1.0, 0.
-    color = [1.0, 1.0, 1.0, 1.0]
-    color_delta = [0.0, 0.0, 0.0, 0.0]
-    start_x, start_y, velocity_x, velocity_y = 0, 0, 0, 0
-    radial_acceleration, tangent_acceleration = 0, 0
-    emit_radius, emit_radius_delta = 0, 0
-    emit_rotation, emit_rotation_delta = 0, 0
-    rotation_delta, scale_delta = 0, 0
+    
+    def __init__(self):
+        self.pos = [0.,0.,0.]
+        self.rotation = 0
+        self.current_time = 0
+        self.scale, self.total_time = 1.0, 0.
+        self.color = [1.0, 1.0, 1.0, 1.0]
+        self.color_delta = [0.0, 0.0, 0.0, 0.0]
+        self.start = [0., 0., 0.]
+        self.velocity = [0., 0., 0.]
+        self.radial_acceleration, self.tangent_acceleration = 0, 0
+        self.emit_radius, self.emit_radius_delta = 0, 0
+        self.emit_rotation, self.emit_rotation_delta = 0, 0
+        self.rotation_delta, self.scale_delta = 0, 0
 
 
 class ParticleSystem(Widget):
@@ -97,7 +100,7 @@ class ParticleSystem(Widget):
         for name, value in kwargs.items():
             if name=="dim_count":
                 self.dim_count=int(value)
-                print("[ ParticleSystem ] (verbose message) __init__: caller set dimensions to " + str(self.dim_count))
+                #print("[ ParticleSystem ] (verbose message) __init__: caller set dimensions to " + str(self.dim_count))
         self.capacity = 0
         self.particles = list()
         self.particles_dict = dict()
@@ -191,7 +194,7 @@ class ParticleSystem(Widget):
             #self.emitter_x = float(try_x)
         #if try_y is not None:
             #self.emitter_y = float(try_y)
-        if self.dim_count>2:
+        if self.dim_count > 2:
             if try_x is not None and try_y is not None:
                 self.pos = [ float(try_x), float(try_y), float(try_z) ]
         else:
@@ -280,17 +283,23 @@ class ParticleSystem(Widget):
         particle.current_time = 0.0
         particle.total_time = life_span
 
-        if self.dim_count == 3:
-            particle.pos = [ random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], self.emitter_y_variance), random_variance(self.pos[2], self.emitter_x_variance) ]
+        if self.dim_count > 2:
+            particle.pos[0] = random_variance(self.pos[0], self.emitter_x_variance)
+            particle.pos[1] = random_variance(self.pos[1], self.emitter_y_variance)
+            #reuse x in 3D mode:
+            particle.pos[2] = random_variance(self.pos[2], self.emitter_x_variance)
+            particle.start[2] = self.pos[2]
         else:
-            particle.pos = [ random_variance(self.pos[0], self.emitter_x_variance), random_variance(self.pos[1], self.emitter_y_variance) ]
-        particle.start_x = self.pos[0]  # formerly self.emitter_x
-        particle.start_y = self.pos[1]  # formerly self.emitter_x
+            particle.pos[0] = random_variance(self.pos[0], self.emitter_x_variance)
+            particle.pos[1] = random_variance(self.pos[1], self.emitter_y_variance)
+        particle.start[0] = self.pos[0]  # formerly self.emitter_x
+        particle.start[1] = self.pos[1]  # formerly self.emitter_x
+        #2 is done above in `dim_count > 2` case
 
         angle = random_variance(self.emit_angle, self.emit_angle_variance)
         speed = random_variance(self.speed, self.speed_variance)
-        particle.velocity_x = speed * math.cos(angle)
-        particle.velocity_y = speed * math.sin(angle)
+        particle.velocity[0] = speed * math.cos(angle)
+        particle.velocity[1] = speed * math.sin(angle)
 
         particle.emit_radius = random_variance(self.max_radius, self.max_radius_variance)
         particle.emit_radius_delta = (self.max_radius - self.min_radius) / life_span
@@ -330,43 +339,55 @@ class ParticleSystem(Widget):
             particle.emit_rotation += particle.emit_rotation_delta * passed_time
             particle.emit_radius -= particle.emit_radius_delta * passed_time
             particle.pos[0] = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius
-            particle.pos[1] = self.pos[1] - math.sin(particle.emit_rotation) * particle.emit_radius
             if self.dim_count > 2:
+                #should rotate around y in 3D mode:
                 particle.pos[2] = self.pos[2] - math.sin(particle.emit_rotation) * particle.emit_radius
+            else:
+                particle.pos[1] = self.pos[1] - math.sin(particle.emit_rotation) * particle.emit_radius
 
             if particle.emit_radius < self.min_radius:
                 particle.current_time = particle.total_time
 
         else:
-            distance_x = particle.pos[0] - particle.start_x
-            distance_y = particle.pos[1] - particle.start_y
-            distance_z = None
+            distance = [0., 0., 0.]
+            for i in range(self.dim_count):
+                distance[i] = particle.pos[i] - particle.start[i]
             if self.dim_count > 2:
-                distance_z = particle.pos[2]
-            distance_scalar = math.sqrt(distance_x * distance_x + distance_y * distance_y)
+                #rotate around y in 3D mode, so delta is in z not y:
+                distance_scalar = math.sqrt(distance[0] * distance[0] + distance[2] * distance[2])
+            else:
+                distance_scalar = math.sqrt(distance[0] * distance[0] + distance[1] * distance[1])
             if distance_scalar < 0.01:
                 distance_scalar = 0.01
 
-            radial_x = distance_x / distance_scalar
-            radial_y = distance_y / distance_scalar
-            tangential_x = radial_x
-            tangential_y = radial_y
+            radial = [0., 0., 0.]
+            tangential = [0., 0., 0.]
+            for i in range(self.dim_count):
+                radial[i] = distance[i] / distance_scalar
+                tangential[i] = radial[i]
 
-            radial_x *= particle.radial_acceleration
-            radial_y *= particle.radial_acceleration
-
-            new_y = tangential_x
-            tangential_x = -tangential_y * particle.tangent_acceleration
-            tangential_y = new_y * particle.tangent_acceleration
-
-            particle.velocity_x += passed_time * (self.gravity_x + radial_x + tangential_x)
-            particle.velocity_y += passed_time * (self.gravity_y + radial_y + tangential_y)
-
-            particle.pos[0] += particle.velocity_x * passed_time
-            particle.pos[1] += particle.velocity_y * passed_time
+            radial[0] *= particle.radial_acceleration
+            new_pos = [0., 0., 0.]  # formerly new_y
             if self.dim_count > 2:
-                #reuse x to make 2D pex files compatible with 3D:
-                particle.pos[2] += particle.velocity_x * passed_time
+                #move away from y axis if 3D:
+                radial[2] *= particle.radial_acceleration
+                new_pos[2] = tangential[0]
+                tangential[0] = -tangential[1] * particle.tangent_acceleration
+                tangential[2] = new_pos[2] * particle.tangent_acceleration
+            else:
+                radial[1] *= particle.radial_acceleration
+                new_pos[1] = tangential[0]
+                tangential[0] = -tangential[1] * particle.tangent_acceleration
+                tangential[1] = new_pos[1] * particle.tangent_acceleration
+
+            
+            gravity = [0., 0., 0.]
+            gravity[0] = self.gravity_x
+            gravity[1] = self.gravity_y
+            
+            for i in range(self.dim_count):
+                particle.velocity[i] += passed_time * (gravity[i] + radial[i] + tangential[i])
+                particle.pos[i] += particle.velocity[i] * passed_time
 
         particle.scale += particle.scale_delta * passed_time
         particle.rotation += particle.rotation_delta * passed_time
