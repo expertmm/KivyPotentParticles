@@ -16,7 +16,7 @@ from kivyparticle import ParticleSystem
 
 
 class DemoParticle(Widget):
-    
+
     def __init__(self, **kwargs):
         super(DemoParticle, self).__init__(**kwargs)
         self.dim_count = 2
@@ -32,13 +32,12 @@ class DemoParticle(Widget):
     def _app_loaded(self, dt):
         #dt is passed time according to kivy-particle (kivyparticle/engine.py)
         self._show("sun")
-        
-        
-    def create_particle_systems(self, d):
-        self.systems["sun"] = ParticleSystem('media/sun.pex', dim_count=d)
-        self.systems["colorspray"] = ParticleSystem('media/colorspray.pex', dim_count=d)
-        self.systems["jellyfish"] = ParticleSystem('media/jellyfish.pex', dim_count=d)
-        self.systems["fire"] = ParticleSystem('media/fire.pex', dim_count=d)
+
+    def create_particle_systems(self, dim_count):
+        self.systems["sun"] = ParticleSystem('media/sun.pex', dim_count=dim_count, flatten_enable=True)
+        self.systems["colorspray"] = ParticleSystem('media/colorspray.pex', dim_count=dim_count, flatten_enable=True)
+        self.systems["jellyfish"] = ParticleSystem('media/jellyfish.pex', dim_count=dim_count, flatten_enable=True)
+        self.systems["fire"] = ParticleSystem('media/fire.pex', dim_count=dim_count, flatten_enable=True)
 
     def on_touch_down(self, touch):
         self.current.pos[0] = float(touch.x)

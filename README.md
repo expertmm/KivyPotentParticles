@@ -17,6 +17,7 @@ used in https://github.com/expertmm/ParticlePandaPy3 and eventually may be used 
 ## Changes
 (2018-01-09)
 * replaced emitter_*_variance with emitter_variance coordinate list
+* now flatten_enable is used by ParticleSystem constructor if present via kwargs (helps 3D mode work better on 2D projection matrix such as an unmodified Kivy Widget)
 (2018-01-08)
 * kivyparticle/engine.py: added more checks for 3D; ParticleSystem now has 3D pos instead of inherited pos which has immutable length of 2; _advance_particle corrected to modify particle.pos instead of self.pos
 * demo/main.py: delayed start of demo so that it knows layout size (for proper centering)
