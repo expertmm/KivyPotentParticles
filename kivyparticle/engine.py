@@ -68,8 +68,7 @@ class ParticleSystem(Widget):
     start_rotation_variance = NumericProperty(0)
     end_rotation = NumericProperty(0)
     end_rotation_variance = NumericProperty(0)
-    emitter_x_variance = NumericProperty(100)
-    emitter_y_variance = NumericProperty(100)
+    emitter_variance = ListProperty([100., 100., 100.])
     start_gravity = ListProperty([0.,0.,0.])
     end_gravity = ListProperty([0.,0.,0.])
     speed = NumericProperty(0)
@@ -114,7 +113,6 @@ class ParticleSystem(Widget):
         self.initial_capacity = self.max_num_particles
         self.max_capacity = self.max_num_particles
         self._raise_capacity(self.initial_capacity)
-        self.emitter_z_variance = None
 
         with self.canvas.before:
             Callback(self._set_blend_func)
@@ -173,8 +171,9 @@ class ParticleSystem(Widget):
             self.texture_path = texture_path
 
         self.texture = Image(self.texture_path).texture
-        #self.emitter_x = 0.0
-        #self.emitter_y = 0.0
+        self.pos[0] = 0.0  # formerly emitter_x
+        self.pos[1] = 0.0  # formerly emitter_y
+        self.pos[2] = 0.0
         try_x = None
         try_y = None
         try_z = None
@@ -189,37 +188,37 @@ class ParticleSystem(Widget):
             try_z = self._parse_data('sourcePosition', 'z')
         else:
             if self.dim_count > 2:
-                try_z = try_y  #xz as ground plane to use 2D pex in 3D
+                try_z = try_x  #xz as ground plane to use 2D pex in 3D
                 try_y = 0.0  # on ground
             else:
                 try_z = 0.0
         #else ignore -- everything is ok (sourcePosition not present in later versions of pex)
-        #if try_x is not None:
-            #self.emitter_x = float(try_x)
-        #if try_y is not None:
-            #self.emitter_y = float(try_y)
+        # ListProperty must remain same len or exception occurs:
+        if try_x is None:
+            try_x = 0.
+        if try_y is None:
+            try_y = 0.
+        if try_z is None:
+            try_z = 0.
+        self.pos = [ float(try_x), float(try_y), float(try_z) ]
+        self.emitter_variance[0] = float(self._parse_data('sourcePositionVariance', 'x'))
+        self.emitter_variance[1] = float(self._parse_data('sourcePositionVariance', 'y'))
         if self.dim_count > 2:
-            if try_x is not None and try_y is not None:
-                self.pos = [ float(try_x), float(try_y), float(try_z) ]
+            if self._has_value('sourcePositionVariance','z'):
+                self.emitter_variance[2] = float(self._parse_data('sourcePositionVariance', 'z'))
+            else:
+                # reuse other ground dimension to use pex in 3D:
+                self.emitter_variance[2] = self.emitter_variance[0]
         else:
-            if try_x is not None and try_y is not None:
-                #ListProperty must remain same len or exception occurs:
-                self.pos[0] = float(try_x)
-                self.pos[1] = float(try_y)
-        self.emitter_x_variance = float(self._parse_data('sourcePositionVariance', 'x'))
-        self.emitter_y_variance = float(self._parse_data('sourcePositionVariance', 'y'))
-        if self._has_value('sourcePositionVariance','z'):
-            self.emitter_z_variance = float(self._parse_data('sourcePositionVariance', 'z'))
-        else:
-            self.emitter_z_variance = None
+            self.emitter_variance[2] = 0.0
         self.start_gravity[0] = float(self._parse_data('gravity', 'x'))
         self.start_gravity[1] = float(self._parse_data('gravity', 'y'))
         if self.dim_count > 2:
             if self._has_value('gravity','z'):
                 self.start_gravity[2] = float(self._parse_data('gravity', 'z'))
             else:
-                self.start_gravity[1] = float(self._parse_data('gravity', 'y'))
-                #reuse x for ground dim z to make 2D pex work with 3D:
+                # self.start_gravity[1] = 0.0  # flatten
+                # Reuse x for ground dim z to make 2D pex work with 3D:
                 self.start_gravity[2] = float(self._parse_data('gravity', 'x'))            
 
         if self._has_value('finishGravity','x'):
@@ -228,18 +227,12 @@ class ParticleSystem(Widget):
             self.end_gravity[0] = self.start_gravity[0]
         if self._has_value('finishGravity','y'):
             self.end_gravity[1] = float(self._parse_data('finishGravity', 'y'))
-            print("using finishGravity " + str(self.end_gravity[0]) + ", " + str(self.end_gravity[1]))  # debug only
         else:
             self.end_gravity[1] = self.start_gravity[1]
-            print("no finishGravity")
         if self._has_value('finishGravity','z'):
             self.end_gravity[2] = float(self._parse_data('finishGravity', 'z'))
         else:
             self.end_gravity[2] = self.start_gravity[2]
-        
-        
-
-
 
         self.emitter_type = int(self._parse_data('emitterType'))
         self.max_num_particles = int(self._parse_data('maxParticles'))
@@ -296,12 +289,13 @@ class ParticleSystem(Widget):
             if (elements is not None) and (len(elements)>0):
                 tmp = elements[0].getAttribute(attribute)
                 if (tmp is not None) and (tmp != ""):
-                    print("[ ParticleSystem ] (verbose message) _has_value got " + name + "." + str(attribute) + ": " + tmp) 
+                    #print("[ ParticleSystem ] (verbose message) " + \
+                    #      "_has_value got " + name + "." + \
+                    #      str(attribute) + ": " + tmp) 
                     result = True
-            else:
-                print("ERROR: '"+str(name)+"' not found in config ")  # +str(self._config.toxml()))
+            #else:
+            #    print("ERROR: '"+str(name)+"' not found in config ")  # +str(self._config.toxml()))
             return result
-            
 
     def _parse_color(self, name):
         return [float(self._parse_data(name, 'red')), float(self._parse_data(name, 'green')), float(self._parse_data(name, 'blue')), float(self._parse_data(name, 'alpha'))]
@@ -338,21 +332,10 @@ class ParticleSystem(Widget):
         if self.dim_count > 2:
             H_AXIS_I = 2  # ground is xz plane in 3D mode
 
-        if self.dim_count > 2:
-            particle.pos[0] = random_variance(self.pos[0], self.emitter_x_variance)
-            particle.pos[1] = random_variance(self.pos[1], self.emitter_y_variance)
-            if self.emitter_z_variance is not None:
-                particle.pos[H_AXIS_I] = random_variance(self.pos[H_AXIS_I], self.emitter_z_variance)
-            else:
-                #reuse x in 3D mode for other ground axis:
-                particle.pos[H_AXIS_I] = random_variance(self.pos[H_AXIS_I], self.emitter_x_variance)
-            particle.start[2] = self.pos[2]
-        else:
-            particle.pos[0] = random_variance(self.pos[0], self.emitter_x_variance)
-            particle.pos[1] = random_variance(self.pos[1], self.emitter_y_variance)
-        particle.start[0] = self.pos[0]  # formerly self.emitter_x
-        particle.start[1] = self.pos[1]  # formerly self.emitter_y
-        #particle.start[2] is done above in `dim_count > 2` case
+        # NOTE: emitter_variance is prepared based on dim_count on load
+        for i in range(self.dim_count):
+            particle.pos[i] = random_variance(self.pos[i], self.emitter_variance[i])
+            particle.start[i] = self.pos[0]
 
         angle = random_variance(self.emit_angle, self.emit_angle_variance)
         speed = random_variance(self.speed, self.speed_variance)
