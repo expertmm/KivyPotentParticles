@@ -34,7 +34,7 @@ BLEND_FUNC = {0: GL_ZERO,
 
 
 class Particle(object):
-    
+
     def __init__(self):
         self.pos = [0.,0.,0.]
         self.rotation = 0
@@ -297,7 +297,7 @@ class ParticleSystem(Widget):
                 if (tmp is not None) and (tmp != ""):
                     #print("[ ParticleSystem ] (verbose message) " + \
                     #      "_has_value got " + name + "." + \
-                    #      str(attribute) + ": " + tmp) 
+                    #      str(attribute) + ": " + tmp)
                     result = True
             #else:
             #    print("ERROR: '"+str(name)+"' not found in config ")  # +str(self._config.toxml()))
@@ -372,7 +372,7 @@ class ParticleSystem(Widget):
 
         particle.color_delta = [(end_color[i] - start_color[i]) / life_span for i in range(4)]
         particle.color = start_color
-        
+
         # gravity delta
         particle.gravity = [self.start_gravity[i] for i in range(3)]
         particle.gravity_delta = [(self.end_gravity[i] - self.start_gravity[i]) / life_span for i in range(3)]
@@ -439,7 +439,7 @@ class ParticleSystem(Widget):
 
             #gravity = [0., 0., 0.]
 
-            #NOTE: gravity is already processed for dim_count on load
+            # NOTE: gravity is already processed for dim_count on load
             #gravity[0] = self.gravity[0]
             #if self.gravity_z is not None:
             #    gravity[H_AXIS_I] = self.gravity_z
@@ -553,6 +553,6 @@ class ParticleSystem(Widget):
                 if self.dim_count > 2:
                     self.particles_dict[particle]['translate'].xyz = (particle.pos[0], particle.pos[1], particle.pos[2])
                 else:
-                    self.particles_dict[particle]['translate'].xy = (particle.pos[0], particle.pos[1])                
+                    self.particles_dict[particle]['translate'].xy = (particle.pos[0], particle.pos[1])
                 self.particles_dict[particle]['color'].rgba = particle.color
                 self.particles_dict[particle]['rect'].points = (-size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5, -size[1] * 0.5, size[0] * 0.5,  size[1] * 0.5, -size[0] * 0.5,  size[1] * 0.5)
